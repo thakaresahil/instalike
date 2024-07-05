@@ -6,16 +6,18 @@ import Register from "../signup/Register";
 
 function NavBar() {
   const navigate = useNavigate();
+
   const [logIn, setLogIn] = useState(false);
   const [register, setRegister] = useState(false);
   const [loginstatus, setLogInstatus] = useState(false);
 
   const uid = localStorage.getItem("uid");
+  const token = localStorage.getItem("token");
   useEffect(() => {
-    if (uid) {
+    if (token) {
       setLogInstatus(true);
     }
-  }, [uid]);
+  }, [token]);
 
   const handleLoginComponent = () => {
     setRegister(false);
@@ -36,7 +38,7 @@ function NavBar() {
   };
 
   return (
-    <div className=" bg-gray-800 p-2 ">
+    <div className="p-2 ">
       <div className="container mx-auto flex justify-around items-center">
         <NavLink className="text-2xl font-semibold text-red-500 " to="/">InstaStyle</NavLink>
         <div>
@@ -51,7 +53,7 @@ function NavBar() {
             </div>
           ) : (
             <button className="text-red-500" onClick={handleLoginComponent}>
-              Login/Signup
+              Login
             </button>
           )}
         </div>

@@ -12,7 +12,7 @@ function Login({ open, handleClose, handleRegister }) {
   }, [localcheck, handleClose]);
 
   const [logindata, setData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [wrongpassword, setWrongPassword] = useState("");
@@ -46,7 +46,8 @@ function Login({ open, handleClose, handleRegister }) {
             setFormError(result.error);
           }
           else{
-            localStorage.setItem("uid", result.id);
+            localStorage.setItem("uid", result.uid);
+            localStorage.setItem("token", result.token);
             handleClose();
           }
         } catch (error) {
@@ -82,12 +83,12 @@ function Login({ open, handleClose, handleRegister }) {
             ❌
           </button>
           <input
-            type="text"
+            type="email"
             className="block border border-grey-light w-full p-3 rounded mb-4 hover:shadow-lg font-medium transition transform hover:-translate-y-0.5"
-            name="username"
-            placeholder="username"
+            name="email"
+            placeholder="email"
             onChange={handlechange}
-            value={logindata.username}
+            value={logindata.email}
             required
           />
 

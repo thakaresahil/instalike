@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 function Post() {
   const navigate = useNavigate();
   const [formError, setFormError] = useState("");
-  const maxSize = 5 * 1024 * 1024;
+  const maxSize = 5 * 1048576;
   const uid = localStorage.getItem("uid");
+  const token = localStorage.getItem("token");
   const [postImg, setPostImg] = useState();
 
   const [post, setPost] = useState({
@@ -22,6 +23,7 @@ function Post() {
   }
 
   const handleFileChange = (e) => {
+    e.preventDefault();
     const selectedFile = e.target.files[0];
     if (selectedFile && selectedFile.size > maxSize) {
       setFormError("File size exceeds 5MB");
@@ -32,17 +34,19 @@ function Post() {
     }
   };
 
-  const handlePostPost = () => {
-    if (postImg === undefined) {
-      setFormError("Error File");
+  const handlePostPost = async (e) => {
+    e.preventDefault();
+    if (!postImg) {
+      setFormError("Error: No file selected");
       return;
     }
-    if (uid) {
+    if (token) {
       const formData = new FormData();
-      formData.append("post", postImg);
+      formData.append("postImg", postImg); // Ensure this key matches the server expectation
       formData.append("uid", post.userid);
       formData.append("description", post.description);
-      axios
+
+      await axios
         .post("http://localhost:9000/upload/post", formData)
         .then((response) => {
           try {
@@ -51,12 +55,19 @@ function Post() {
               navigate("/");
             }
           } catch (err) {
-            console.error("Error Parsing JSON", err);
+            console.error("Error parsing JSON", err);
           }
         })
         .catch((err) => {
+          if (err.response && err.response.status === 403) {
+            setFormError("Session Expired, Please Log In");
+            localStorage.removeItem("token");
+            localStorage.removeItem("uid");
+          }
           console.error("Error making the request: ", err);
         });
+    } else {
+      navigate("/");
     }
   };
 
@@ -65,7 +76,7 @@ function Post() {
       <h1 className="text-3xl font-semibold">Create Post</h1>
       <div className="flex items-center justify-center w-full">
         <label
-          for="dropzone-file"
+          htmlFor="dropzone-file"
           className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
         >
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -80,12 +91,12 @@ function Post() {
                 stroke="currentColor"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth  ="2"
+                strokeWidth="2"
                 d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
               />
             </svg>
             <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-              <span clasName="font-semibold">Click to upload</span> or drag and
+              <span className="font-semibold">Click to upload</span> or drag and
               drop
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -96,7 +107,7 @@ function Post() {
             id="dropzone-file"
             type="file"
             className="hidden"
-            name="postimg"
+            name="postImg"
             onChange={handleFileChange}
           />
         </label>

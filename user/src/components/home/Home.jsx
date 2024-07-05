@@ -9,6 +9,7 @@ function Home() {
   const [postData, setPostData] = useState([]);
   const socket = io("http://localhost:9000");
   const uid = localStorage.getItem("uid");
+  const token = localStorage.getItem("token");
   const [isLogIn, setIsLogIn] = useState(false);
   const [register, setRegister] = useState(false);
 
@@ -22,7 +23,7 @@ function Home() {
   };
 
   useEffect(() => {
-    if (uid) {
+    if (token) {
       setIsLogIn(true);
     }
     fetchProductData();
@@ -44,12 +45,53 @@ function Home() {
 
   const handlelike = async (pid) => {
     if (uid) {
-      await axios.patch("http://localhost:9000/like", { pid: pid });
+      await axios
+        .patch("http://localhost:9000/like", {
+          token: token,
+          pid: pid,
+          uid: uid,
+        })
+        .then((response) => {
+          if (response.data.message === "Already Liked") {
+            console.log("Already Liked the post")
+          } else if (response.data.message === "Successfully Liked") {
+            setPostData((prevData) =>
+              prevData.map((post) =>
+                post._id === pid ? { ...post, likes: post.likes + 1 } : post
+              )
+            );
+          }
+        })
+        .catch((error) => {
+          console.log("Error Making Request : ",error);
+        });
     } else {
       setIsLogIn(false);
       handleLoginComponent();
     }
   };
+
+  const handleCommentSubmit = async (pid,comment) =>{
+    if(uid){
+      await axios.patch("http://localhost:9000/post/comment",{
+        token: token,
+        uid: uid,
+        pid: pid,
+        comment: comment,
+      })
+      .then((response) =>{
+        if(response.data.message === "Successfully Commented"){
+          console.log("Successfully Commented");
+          
+        }else if(response.data.message === "Not able to comment"){
+          console.log("Not able to comment")
+        }
+      })
+      .catch((error) =>{
+        console.log("Error Making Request : ", error);
+      });
+    }
+  }
 
   const handleregister = () => {
     setIsLogIn(false);
@@ -70,19 +112,22 @@ function Home() {
       {postData.length > 0 &&
         postData.map((postItem) => (
           <Postcard
-            key={postItem.id}
-            id={postItem.id}
+            key={postItem._id}
+            id={postItem._id}
             userid={postItem.userid}
-            username={postItem.username}
+            userpic={postItem.userDetails.profilePicture}
+            username={postItem.userDetails.username}
             image={postItem.image}
+            profileImage={postItem.userDetails.profilePicture}
             description={postItem.description}
-            likes={postItem.likes}
-            time={postItem.created_at}
+            likes={postItem.likes.length}
+            time={postItem.createdAt}
             onLikes={handlelike}
+            onComment={handleCommentSubmit}
           />
         ))}
 
-        {isLogIn ? (
+      {isLogIn ? (
         <Login
           open={isLogIn}
           handleClose={handleClose}

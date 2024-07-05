@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog } from "@mui/material";
 
-function Register({ open, handleClose, handleLoginComponent}) {
+function Register({ open, handleClose, handleLoginComponent }) {
   const navigate = useNavigate();
   const [passwordError, setPasswordError] = useState("");
   const [redirecttologin, setRedirecttologin] = useState("");
@@ -19,6 +19,7 @@ function Register({ open, handleClose, handleLoginComponent}) {
 
   const [signupdata, setData] = useState({
     username: "",
+    email: "",
     password: "",
     confirm_password: "",
   });
@@ -54,9 +55,11 @@ function Register({ open, handleClose, handleLoginComponent}) {
         .then((response) => {
           try {
             const result = response.data;
-            const neednavigate = result.route;
-            if (neednavigate === "login") {
-              console.log(result);
+            const neednavigate = result.message;
+            if (neednavigate === "Please Use Different Credentials") {
+              // console.log(result);
+              setFormError("Please Use Different Credentials");
+            } else if (neednavigate === "User Already Exist") {
               setRedirecttologin("Already Signup, Please Login!");
             } else {
               console.log("registration successfull");
@@ -84,15 +87,26 @@ function Register({ open, handleClose, handleLoginComponent}) {
         >
           {/* <div class="bg-white px-6 py-8 rounded shadow-md text-black w-full"> */}
           <h1 className="mb-8 text-3xl text-center">Sign up</h1>
-          <button className="absolute top-2 right-2" onClick={handleClose}>❌</button>
-          
+          <button className="absolute top-2 right-2" onClick={handleClose}>
+            ❌
+          </button>
+
           <input
-            type="email"
+            type="username"
             className="block border border-grey-light w-full p-3 rounded mb-4 hover:shadow-lg font-medium transition transform hover:-translate-y-0.5"
             name="username"
             placeholder="username"
             onChange={handlechange}
             value={signupdata.username}
+            required
+          />
+          <input
+            type="email"
+            className="block border border-grey-light w-full p-3 rounded mb-4 hover:shadow-lg font-medium transition transform hover:-translate-y-0.5"
+            name="email"
+            placeholder="email"
+            onChange={handlechange}
+            value={signupdata.email}
             required
           />
           <div className="flex gap-4">
