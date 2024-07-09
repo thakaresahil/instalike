@@ -48,6 +48,7 @@ function Login({ open, handleClose, handleRegister }) {
           else{
             localStorage.setItem("uid", result.uid);
             localStorage.setItem("token", result.token);
+            window.location.reload();
             handleClose();
           }
         } catch (error) {

@@ -364,7 +364,7 @@ app.get("/profile/:userId", async (req, res) => {
   }
 });
 
-app.get("/postsdata", async (req, res) => {
+app.post("/postsdata", authenticateToken ,async (req, res) => {
   try {
     const posts = await Post.aggregate([
       {

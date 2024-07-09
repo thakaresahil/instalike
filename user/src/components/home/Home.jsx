@@ -4,21 +4,27 @@ import Postcard from "../postcard/Postcard";
 import io from "socket.io-client";
 import Login from "../signup/Login";
 import Register from "../signup/Register";
+import Loading from "../loading/Loading";
 
 function Home() {
   const [postData, setPostData] = useState([]);
   const socket = io("http://localhost:9000");
   const uid = localStorage.getItem("uid");
   const token = localStorage.getItem("token");
+  const [loading, setLoading] = useState(true);
   const [isLogIn, setIsLogIn] = useState(false);
   const [register, setRegister] = useState(false);
 
   const fetchProductData = async () => {
     try {
-      const response = await axios.get("http://localhost:9000/postsdata");
+      const response = await axios.post("http://localhost:9000/postsdata", {
+        token: token,
+      });
       setPostData(response.data);
     } catch (error) {
       console.error("Error Fetching Data: " + error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,9 +47,9 @@ function Home() {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [token]);
 
-  const handlelike = async (pid) => {
+  const handleLike = async (pid) => {
     if (uid) {
       await axios
         .patch("http://localhost:9000/like", {
@@ -53,7 +59,7 @@ function Home() {
         })
         .then((response) => {
           if (response.data.message === "Already Liked") {
-            console.log("Already Liked the post")
+            console.log("Already Liked the post");
           } else if (response.data.message === "Successfully Liked") {
             setPostData((prevData) =>
               prevData.map((post) =>
@@ -63,7 +69,7 @@ function Home() {
           }
         })
         .catch((error) => {
-          console.log("Error Making Request : ",error);
+          console.log("Error Making Request : ", error);
         });
     } else {
       setIsLogIn(false);
@@ -71,27 +77,27 @@ function Home() {
     }
   };
 
-  const handleCommentSubmit = async (pid,comment) =>{
-    if(uid){
-      await axios.patch("http://localhost:9000/post/comment",{
-        token: token,
-        uid: uid,
-        pid: pid,
-        comment: comment,
-      })
-      .then((response) =>{
-        if(response.data.message === "Successfully Commented"){
-          console.log("Successfully Commented");
-          
-        }else if(response.data.message === "Not able to comment"){
-          console.log("Not able to comment")
-        }
-      })
-      .catch((error) =>{
-        console.log("Error Making Request : ", error);
-      });
+  const handleCommentSubmit = async (pid, comment) => {
+    if (uid) {
+      await axios
+        .patch("http://localhost:9000/post/comment", {
+          token: token,
+          uid: uid,
+          pid: pid,
+          comment: comment,
+        })
+        .then((response) => {
+          if (response.data.message === "Successfully Commented") {
+            console.log("Successfully Commented");
+          } else if (response.data.message === "Not able to comment") {
+            console.log("Not able to comment");
+          }
+        })
+        .catch((error) => {
+          console.log("Error Making Request : ", error);
+        });
     }
-  }
+  };
 
   const handleregister = () => {
     setIsLogIn(false);
@@ -109,7 +115,9 @@ function Home() {
 
   return (
     <div className="container mx-auto flex flex-col items-center justify-start gap-6 my-6">
-      {postData.length > 0 &&
+      {loading ? (
+        <Loading />
+      ) : postData.length > 0 ? (
         postData.map((postItem) => (
           <Postcard
             key={postItem._id}
@@ -122,10 +130,13 @@ function Home() {
             description={postItem.description}
             likes={postItem.likes.length}
             time={postItem.createdAt}
-            onLikes={handlelike}
+            onLikes={handleLike}
             onComment={handleCommentSubmit}
           />
-        ))}
+        ))
+      ) : (
+        <p>No posts available</p>
+      )}
 
       {isLogIn ? (
         <Login

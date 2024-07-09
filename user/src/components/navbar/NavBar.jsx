@@ -17,6 +17,9 @@ function NavBar() {
     if (token) {
       setLogInstatus(true);
     }
+    else{
+      setLogInstatus(false);
+    }
   }, [token]);
 
   const handleLoginComponent = () => {
@@ -40,7 +43,7 @@ function NavBar() {
   return (
     <div className="p-2 ">
       <div className="container mx-auto flex justify-around items-center">
-        <NavLink className="text-2xl font-semibold text-red-500 " to="/">InstaStyle</NavLink>
+        <NavLink className="text-2xl font-semibold text-red-500 italic" to="/">InstaStyle</NavLink>
         <div>
           {loginstatus ? (
             <div className="flex items-center gap-4">

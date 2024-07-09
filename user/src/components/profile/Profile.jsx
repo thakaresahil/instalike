@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Postcard from "../postcard/Postcard";
+import { useNavigate } from "react-router-dom";
+import ProfilePostcard from "../postcard/ProfilePostcard";
+import Loading from "../loading/Loading";
 
 function Profile() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [profileUpload, setProfileUpload] = useState(false);
@@ -12,24 +15,28 @@ function Profile() {
   const token = localStorage.getItem("token");
   const [profileImage, setProfileImage] = useState(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:9000/profile/${userId}`
-        );
-        setUser(response.data.user);
-        setPosts(response.data.posts);
-        setLoading(false);
-        console.log(response.data);
-      } catch (error) {
-        console.error("Error fetching profile data:", error);
-        setLoading(false);
-      }
-    };
+  const fetchProfile = async () => {
+    if(!localStorage.getItem("uid")){
+      navigate("/");
+    }
+    try {
+      const response = await axios.get(
+        `http://localhost:9000/profile/${userId}`
+      );
+      setUser(response.data.user);
+      setPosts(response.data.posts);
+      setLoading(false);
+      // console.log(response.data);
+    } catch (error) {
+      console.error("Error fetching profile data:", error);
+      setLoading(false);
+    }
+  };
 
+
+  useEffect(() => {
     fetchProfile();
-  }, [userId]);
+  });
 
   const profileUploading = () => {
     setProfileUpload(!profileUpload);
@@ -48,6 +55,8 @@ function Profile() {
   const handleLogOut = () => {
     localStorage.removeItem("uid");
     localStorage.removeItem("token");
+    fetchProfile();
+
   }
 
   const handleUploadingPart = async () => {
@@ -60,7 +69,7 @@ function Profile() {
           "http://localhost:9000/upload/profilepicture",
           formData
         );
-        console.log(response.data);
+        // console.log(response.data);
         setProfileUpload(false);
         // Optionally refresh user data to show the updated profile picture
         setUser((prevUser) => ({
@@ -74,14 +83,14 @@ function Profile() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div><Loading/></div>;
   }
 
   return (
-    <div className=" text-white container mx-auto">
+    <div className=" text-white container mx-auto my-8">
       {user ? (
-        <div className="flex flex-col md:mx-80">
-          <div className="flex justify-between flex-col md:flex-row gap-10 h-60 ">
+        <div className="flex flex-col">
+          <div className="flex justify-center items-center flex-col md:flex-row mx-8 md:mx-0 gap-10 h-60 ">
             <div className="flex flex-col justify-start items-center">
               <img
                 src={`http://localhost:9000/profile/` + user.profilePicture}
@@ -111,8 +120,8 @@ function Profile() {
                 </button>
               )}
             </div>
-            <div className="flex flex-col justify-around items-center gap-2">
-              <div className="flex w-full justify-between items-center">
+            <div className="flex flex-col justify-around items-center gap-4 ">
+              <div className="flex w-full justify-between items-center gap-4">
                 <h1 className="text-xl font-medium ">{user.username}</h1>
                 <button className="bg-gray-800 rounded-md px-4 py-1">
                   Edit Profile
@@ -129,15 +138,16 @@ function Profile() {
               <p>{user.bio}</p>
             </div>
           </div>
-          <div className="w-full mt-6">
+          <div className="flex flex-col justify-center items-center mt-6">
             <h2 className="text-xl font-semibold">Posts</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {posts.map((post) => (
-                <Postcard
+            <div className="flex flex-wrap items-center justify-start gap-6">
+              {posts.length > 0 ?
+                posts.map((post) => (
+                <ProfilePostcard
                   key={post._id}
                   id={post._id}
                   userid={post.userId}
-                  userpic={user.profilePicture || "default_profile_picture_url"}
+                  userpic={user.profilePicture}
                   username={user.username}
                   image={post.image}
                   description={post.description}
@@ -148,7 +158,9 @@ function Profile() {
                     console.log("Comment on post", postId, comment)
                   } // Implement comment function
                 />
-              ))}
+              )): (
+                <p>No Posts Available</p>
+              ) }
             </div>
           </div>
         </div>
