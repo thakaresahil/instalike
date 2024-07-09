@@ -65,7 +65,7 @@ function Profile() {
       formData.append("profileImage", profileImage);
       formData.append("uid", userId);
       try {
-        const response = await axios.post(
+        await axios.post(
           "http://localhost:9000/upload/profilepicture",
           formData
         );
